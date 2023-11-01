@@ -74,8 +74,10 @@ following:
 
 When using Cython, use either
 
-   $ python setup.py build_ext -i
-   $ python setup.py install
+.. prompt:: bash $
+
+  python setup.py build_ext -i
+  python setup.py install
 
 to generate C files. You are responsible for adding .c/.cpp extensions along
 with build parameters in each submodule ``setup.py``.
@@ -179,22 +181,25 @@ It is however still interesting to check what's happening inside the
 ``_nls_subproblem`` function which is the hotspot if we only consider
 Python code: it takes around 100% of the accumulated time of the module. In
 order to better understand the profile of this specific function, let
-us install ``line_profiler`` and wire it to IPython::
+us install ``line_profiler`` and wire it to IPython:
 
-  $ pip install line_profiler
+.. prompt:: bash $
 
-- **Under IPython 0.13+**, first create a configuration profile::
+  pip install line_profiler
 
-    $ ipython profile create
+- **Under IPython 0.13+**, first create a configuration profile:
 
-  Then register the line_profiler extension in
-  ``~/.ipython/profile_default/ipython_config.py``::
+.. prompt:: bash $
+
+  ipython profile create
+
+Then register the line_profiler extension in
+``~/.ipython/profile_default/ipython_config.py``::
 
     c.TerminalIPythonApp.extensions.append('line_profiler')
     c.InteractiveShellApp.extensions.append('line_profiler')
 
-  This will register the ``%lprun`` magic command in the IPython terminal
-  application and the other frontends such as qtconsole and notebook.
+This will register the ``%lprun`` magic command in the IPython terminal application and the other frontends such as qtconsole and notebook.
 
 Now restart IPython and let us use this new toy::
 
@@ -252,26 +257,30 @@ Memory usage profiling
 
 You can analyze in detail the memory usage of any Python code with the help of
 `memory_profiler <https://pypi.org/project/memory_profiler/>`_. First,
-install the latest version::
+install the latest version:
 
-    $ pip install -U memory_profiler
+.. prompt:: bash $
+
+  pip install -U memory_profiler
 
 Then, setup the magics in a manner similar to ``line_profiler``.
 
-- **Under IPython 0.11+**, first create a configuration profile::
+- **Under IPython 0.11+**, first create a configuration profile:
 
-    $ ipython profile create
+.. prompt:: bash $
 
-  Then register the extension in
-  ``~/.ipython/profile_default/ipython_config.py``
-  alongside the line profiler::
+    ipython profile create
+
+
+Then register the extension in
+``~/.ipython/profile_default/ipython_config.py``
+alongside the line profiler::
 
     c.TerminalIPythonApp.extensions.append('memory_profiler')
     c.InteractiveShellApp.extensions.append('memory_profiler')
 
-  This will register the ``%memit`` and ``%mprun`` magic commands in the
-  IPython terminal application and the other frontends such as qtconsole and
-  notebook.
+This will register the ``%memit`` and ``%mprun`` magic commands in the
+IPython terminal application and the other frontends such as qtconsole and   notebook.
 
 ``%mprun`` is useful to examine, line-by-line, the memory usage of key
 functions in your program. It is very similar to ``%lprun``, discussed in the
@@ -326,15 +335,22 @@ TODO: html report, type declarations, bound checks, division by zero checks,
 memory alignment, direct blas calls...
 
 - https://www.youtube.com/watch?v=gMvkiQ-gOW8
-- http://conference.scipy.org/proceedings/SciPy2009/paper_1/
-- http://conference.scipy.org/proceedings/SciPy2009/paper_2/
+- https://conference.scipy.org/proceedings/SciPy2009/paper_1/
+- https://conference.scipy.org/proceedings/SciPy2009/paper_2/
 
 Using OpenMP
 ------------
 
-Since scikit-learn can be built without OpenMP, it's necessary to
-protect each direct call to OpenMP. This can be done using the following
-syntax::
+Since scikit-learn can be built without OpenMP, it's necessary to protect each
+direct call to OpenMP.
+
+There are some helpers in
+`sklearn/utils/_openmp_helpers.pyx <https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/utils/_openmp_helpers.pyx>`_
+that you can reuse for the main useful functionalities and already have the
+necessary protection to be built without OpenMP.
+
+If the helpers are not enough, you need to protect your OpenMP code using the
+following syntax::
 
   # importing OpenMP
   IF SKLEARN_OPENMP_PARALLELISM_ENABLED:
@@ -367,7 +383,7 @@ Using yep and gperftools
 Easy profiling without special compilation options use yep:
 
 - https://pypi.org/project/yep/
-- http://fa.bianp.net/blog/2011/a-profiler-for-python-extensions
+- https://fa.bianp.net/blog/2011/a-profiler-for-python-extensions
 
 Using gprof
 -----------
@@ -388,10 +404,14 @@ kcachegrind
 ~~~~~~~~~~~
 
 ``yep`` can be used to create a profiling report.
-``kcachegrind`` provides a graphical environment to visualize this report::
+``kcachegrind`` provides a graphical environment to visualize this report:
+
+.. prompt:: bash $
 
   # Run yep to profile some python script
   python -m yep -c my_file.py
+
+.. prompt:: bash $
 
   # open my_file.py.callgrin with kcachegrind
   kcachegrind my_file.py.prof
@@ -412,4 +432,4 @@ See `joblib documentation <https://joblib.readthedocs.io>`_
 A simple algorithmic trick: warm restarts
 =========================================
 
-See the glossary entry for `warm_start <http://scikit-learn.org/dev/glossary.html#term-warm-start>`_
+See the glossary entry for :term:`warm_start`

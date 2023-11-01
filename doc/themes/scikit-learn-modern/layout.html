@@ -15,15 +15,14 @@
   <meta charset="utf-8">
   {{ metatags }}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="Description" content="scikit-learn: machine learning in Python">
 
   {% block htmltitle %}
   <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
   {% endblock %}
   <link rel="canonical" href="http://scikit-learn.org/stable/{{pagename}}.html" />
 
-  {% if favicon %}
-  <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
+  {% if favicon_url %}
+  <link rel="shortcut icon" href="{{ favicon_url|e }}"/>
   {% endif %}
 
   <link rel="stylesheet" href="{{ pathto('_static/css/vendor/bootstrap.min.css', 1) }}" type="text/css" />
@@ -36,7 +35,7 @@
   {%- endfor %}
   <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
 <script id="documentation_options" data-url_root="{{ pathto('', 1) }}" src="{{ pathto('_static/documentation_options.js', 1) }}"></script>
-<script src="{{ pathto('_static/jquery.js', 1) }}"></script>
+<script src="{{ pathto('_static/js/vendor/jquery-3.6.3.slim.min.js', 1) }}"></script>
 {%- block extrahead %} {% endblock %}
 </head>
 <body>
@@ -87,15 +86,44 @@
             Please <a class="font-weight-bold" href="{{ pathto('about').replace('#', '') }}#citing-scikit-learn"><string>cite us</string></a> if you use the software.
           </p>
         </div>
-          {%- if meta and meta['globalsidebartoc']|tobool %}
-          <div class="sk-sidebar-toc sk-sidebar-global-toc">
-            {{ toctree(maxdepth=2, titles_only=True) }}
-          </div>
-          {%- else %}
-          <div class="sk-sidebar-toc">
-            {{ toc }}
-          </div>
-          {%- endif %}
+            {%- if meta and meta['parenttoc']|tobool %}
+            <div class="sk-sidebar-toc">
+            {% set nav = get_nav_object(maxdepth=3, collapse=True, numbered=True) %}
+              <ul>
+              {% for main_nav_item in nav %}
+              {% if main_nav_item.active %}
+              <li>
+                <a href="{{ main_nav_item.url }}" class="sk-toc-active">{{ main_nav_item.title }}</a>
+              </li>
+              <ul>
+              {% for nav_item in main_nav_item.children %}
+                <li>
+                  <a href="{{ nav_item.url }}" class="{% if nav_item.active %}sk-toc-active{% endif %}">{{ nav_item.title }}</a>
+                  {% if nav_item.children %}
+                  <ul>
+                    {% for inner_child in nav_item.children %}
+                      <li class="sk-toctree-l3">
+                        <a href="{{ inner_child.url }}">{{ inner_child.title }}</a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                </li>
+              {% endfor %}
+              </ul>
+              {% endif %}
+              {% endfor %}
+              </ul>
+            </div>
+            {%- elif meta and meta['globalsidebartoc']|tobool %}
+            <div class="sk-sidebar-toc sk-sidebar-global-toc">
+              {{ toctree(maxdepth=2, titles_only=True) }}
+            </div>
+            {%- else %}
+            <div class="sk-sidebar-toc">
+              {{ toc }}
+            </div>
+            {%- endif %}
       </div>
     </div>
     <div id="sk-page-content-wrapper">
