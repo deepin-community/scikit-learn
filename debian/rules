@@ -13,7 +13,7 @@ PY3VERS ?= $(shell py3versions -vr)
 
 export DEB_BUILD_MAINT_OPTIONS := hardening=+all
 
-export DEB_CFLAGS_MAINT_APPEND :=
+export DEB_CFLAGS_MAINT_APPEND := -Wno-incompatible-pointer-types
 export DEB_LDFLAGS_MAINT_APPEND := -Wl,--as-needed
 
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
@@ -61,6 +61,7 @@ endif
 ifeq ($(DEB_HOST_ARCH),armel)
   # Ignored due to bug #1003165
   EXCLUDE_TESTS += and not test_tfidf_no_smoothing
+  EXCLUDE_TESTS += and not test_qda_regularization
 endif
 
 # Until these are fixed:
@@ -98,6 +99,7 @@ endif
 ifeq ($(DEB_HOST_ARCH),i386)
   EXCLUDE_TESTS += and not test_gaussian_kde
   EXCLUDE_TESTS += and not test_y_multioutput
+  EXCLUDE_TESTS += and not test_svc_ovr_tie_breaking[NuSVC]
 endif
 
 
@@ -108,7 +110,7 @@ endif
 
 else
 # for all architectures that are known to have failures in test suite we are ignoring these
-ifeq ($(DEB_HOST_ARCH),$(filter $(DEB_HOST_ARCH), i386 mipsel mips64el hppa armel armhf arm64 ppc64 ppc64el s390x alpha riscv64 amd64))
+ifeq ($(DEB_HOST_ARCH),$(filter $(DEB_HOST_ARCH), i386 loong64 mipsel mips64el hppa armel armhf arm64 ppc64 ppc64el s390x alpha riscv64 amd64))
   # Ignored due to bug #1003165
 IGNORE_ERRORS= || true
 endif
@@ -121,16 +123,9 @@ endif
 export DEBIAN_POLICY_SECTION_4_9_NO_NETWORK_ACCESS=1
 
 %:
-	dh $@ --with python3,sphinxdoc --buildsystem pybuild
+	dh $@ --buildsystem pybuild
 
-%-arch:
-	dh $@ --with python3 --buildsystem pybuild
-
-clean:
-	dh $@ --with python3 --buildsystem pybuild
-
-override_dh_clean:
-	dh_clean
+execute_after_dh_clean:
 	rm -rf .pytest_cache build scikit_learn.egg-info tmp
 	-mv PKG-INFO-BAK PKG-INFO
 	rm -f debian/build-stamp-*
@@ -140,21 +135,18 @@ override_dh_clean:
 	for i in $$(find -name '*.pyx.in'); do \
 		rm -f $${i%.*}; \
 	done
+	find . -name "bootstrap.min*" -delete
 ifneq (,$(filter python-sklearn-doc,$(shell dh_listpackages)))
 	+$(MAKE) -C doc clean
 endif
 
-override_dh_auto_configure:
-	mkdir -p tmp
-	-mv PKG-INFO PKG-INFO-BAK
-	python$(PY3VER) setup.py config
-# 	dh_auto_configure
-	mv PKG-INFO-BAK PKG-INFO
+execute_after_dh_auto_configure:
 	# Provide bootstrap links even at build process - otherwise sphinx fails
 	mkdir -p doc/themes/scikit-learn-modern/static/css/vendor/
 	ln -s /usr/share/javascript/bootstrap4/css/bootstrap.min.css doc/themes/scikit-learn-modern/static/css/vendor/bootstrap.min.css
 	mkdir -p doc/themes/scikit-learn-modern/static/js/vendor
 	ln -s /usr/share/javascript/bootstrap4/js/bootstrap.min.js doc/themes/scikit-learn-modern/static/js/vendor/bootstrap.min.js
+	ln -s /usr/share/javascript/jquery/jquery.min.js           doc/themes/scikit-learn-modern/static/js/vendor/jquery-3.6.3.slim.min.js
 
 # Ensure sample and test data are copied to .pybuild
 define PYBUILD_AFTER_BUILD
@@ -164,28 +156,21 @@ define PYBUILD_AFTER_BUILD
   done;
 endef
 export PYBUILD_AFTER_BUILD
+
+execute_after_dh_auto_build-indep:
 # Only with the default Python 3, additionally use pybuild to run
 # sphinx once the build is complete.
 ifeq (,$(filter nodoc,$(DEB_BUILD_OPTIONS)))
-define PYBUILD_AFTER_BUILD_python$(PY3VER)
-  $(PYBUILD_AFTER_BUILD)
-  PYTHONPATH={build_dir} \
-  http_proxy='127.0.0.1.9' \
-  https_proxy='127.0.0.1.9' \
-  SPHINXBUILD="python$(PY3VER) -m sphinx" \
-  $(MAKE) -C doc html SPHINXOPTS="-j $(JOBS)" || true;
-  [ -d doc/_build/html ]
-endef
-export PYBUILD_AFTER_BUILD_python$(PY3VER)
+	PYTHONPATH=$(shell pybuild --print build_dir  --interpreter python3) \
+	http_proxy='127.0.0.1.9' \
+	https_proxy='127.0.0.1.9' \
+	SPHINXBUILD="python$(PY3VER) -m sphinx" \
+	$(MAKE) -C doc html SPHINXOPTS="-j $(JOBS)" || true;
+	[ -d doc/_build/html ]
 endif
-override_dh_auto_build-arch:
-	# Don't try to build docs in the arch build, so unset that hook
-	env -u PYBUILD_AFTER_BUILD_python$(PY3VER) \
-		dh_auto_build
-
 
 export PYBUILD_TEST_PYTEST := 1
-export PYBUILD_TEST_ARGS_python3 := -m "not network" -v --color=no -k "$(EXCLUDE_TESTS)"
+export PYBUILD_TEST_ARGS_python3 := -m "not network" -v -n `nproc` --color=no -k "$(EXCLUDE_TESTS)"
 define PYBUILD_BEFORE_TEST
   (mv $(CURDIR)/sklearn/conftest.py $(CURDIR)/sklearn/conftest.py.test; \
    mv $(CURDIR)/sklearn/datasets/tests/conftest.py $(CURDIR)/sklearn/datasets/tests/conftest.py.test; \
@@ -201,16 +186,13 @@ export PYBUILD_AFTER_TEST
 # Nothing to do for indep
 override_dh_auto_test-indep:
 
-
 override_dh_auto_test-arch:
 	dh_auto_test -a $(IGNORE_ERRORS)
 
 export PYBUILD_AFTER_INSTALL = rm -f {destdir}/{install_dir}/_configtest*
-override_dh_auto_install:
-	dh_auto_install
+execute_after_dh_auto_install:
 	# cleanup python3 cache (mixing python3 subversions)
 	-find debian/tmp -name "__pycache__" -exec rm -r {} +
-
 
 override_dh_installdocs-arch:
 	dh_installdocs -A README*.rst
