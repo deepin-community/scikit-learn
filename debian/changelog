@@ -1,8 +1,94 @@
-scikit-learn (1.2.1+dfsg-1deepin1) unstable; urgency=medium
+scikit-learn (1.4.2+dfsg-7) unstable; urgency=medium
 
-  * No source change upload against python 3.12.
+  * Team upload.
+  * Use pytest-xdist to run tests in parallel.
+  * Exclude 3 more tests from autopkgtest (Closes: #1082291).
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Mon, 08 Jul 2024 09:57:41 +0200
+ -- Thomas Goirand <zigo@debian.org>  Fri, 29 Nov 2024 13:24:48 +0100
+
+scikit-learn (1.4.2+dfsg-6) unstable; urgency=medium
+
+  * Team upload.
+  * skip test_svc_ovr_tie_breaking[NuSVC] (test_svm) on i386.
+    See upstream Issue#29633. Closes: 1078123.
+
+ -- Drew Parsons <dparsons@debian.org>  Wed, 07 Aug 2024 11:04:05 +0200
+
+scikit-learn (1.4.2+dfsg-5) unstable; urgency=medium
+
+  * Team upload.
+  * d/rules: Add "-Wno-incompatible-pointer-types" to the CFLAGS to fix
+    the build on 32-bit systems.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 02 Aug 2024 14:02:53 +0200
+
+scikit-learn (1.4.2+dfsg-4) unstable; urgency=medium
+
+  * Team upload. Closes: #1077461, #1076923
+  * d/rules: Don't run setup.py ourselves
+  * d/control: switch to PEP-517 building
+  * d/source/options: ignore the .egg-info directory
+  * d/control: use python-numpy-doc & python-matplotlib-doc for our docs
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 02 Aug 2024 11:16:36 +0200
+
+scikit-learn (1.4.2+dfsg-3) unstable; urgency=medium
+
+  * Team upload.
+  * d/watch: upstream switched from a hyphen to an underscore in the
+    source tarball name.
+  * d/github-revision.txt: out of date
+  * d/README.source: added reminder about updating d/github-revision.txt
+  * d/upstream/metadata: upstream finally has a bio.tools identifier
+  * d/patches: adjust some metadata
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 21 Jun 2024 12:45:23 +0200
+
+scikit-learn (1.4.2+dfsg-2) unstable; urgency=medium
+
+  * Team upload.
+  * Apply patch from upstream to fix autopkgtest regression on i386.
+    Closes: #1070201
+  * d/control: -docs: suggest the related/linked -docs packages.
+  * d/patches/no-download-intersphinx-mapping.patch: fix some paths, link
+    to the packaged docs not the remote docs.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 20 Jun 2024 19:38:04 +0200
+
+scikit-learn (1.4.2+dfsg-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+  [ Drew Parsons ]
+  * skip failing tests on armel: test_tfidf_no_smoothing and
+    test_qda_regularization, which don't emit expected divide-by-zero
+    runtime warnings.
+
+  [ Michael R. Crusoe ]
+  * Update docs patch to "import os" as needed
+  * d/tests/python3: test on all supported versions of Python
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 15 Apr 2024 11:46:28 +0200
+
+scikit-learn (1.4.1.post1+dfsg-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream version
+    Closes: #1029701, #1008369, #1027208, #1003165
+  * Build-Depends: s/dh-python/dh-sequence-python3/ (routine-update)
+  * Build-Depends: python3-sphinx-copybutton
+  * Support loong64
+    Closes: #1059206
+  * Drop nose from Build-/Test-Depends
+    Closes: #1018635
+  * Fix clean target
+    Closes: #1046775, #1049646
+  * Work around unknown key 'recommender' in sphinx
+  * Exclude minimized jquery JS from source and use symlink to Debian
+    packaged min.js instead (crossing fingers that the version plays nicely)
+
+ -- Andreas Tille <tille@debian.org>  Sat, 17 Feb 2024 14:59:42 +0100
 
 scikit-learn (1.2.1+dfsg-1) unstable; urgency=medium
 
